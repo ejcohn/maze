@@ -9,15 +9,15 @@ from geometry_msgs.msg import Twist
 def scan_callback(msg):
     global g_range_ahead
     # get the elements w/in a certain range (30 degrees each direction)
-    angle_range = []
-    for i in range(-30, 0):
-        if msg.ranges[i] > 0.05:
-            angle_range.append(msg.ranges[i])
-    for i in range(0, 30):
-        if msg.ranges[i] > 0.05:
-            angle_range.append(msg.ranges[i])
+    angle_range_ahead = msg.ranges[0:30] + msg.ranges[-30:]
 
-    g_range_ahead = min(angle_range)
+    angle_range_right = msg.ranges[59:119]
+    angle_range_left = msg.ranges[226:286]
+
+    print(len(angle_range_ahead))  # if we are getting all the indices we want
+
+
+    g_range_ahead = min(angle_range_ahead)
 
 # Main program
 g_range_ahead = 1 # anything to start
