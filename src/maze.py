@@ -48,6 +48,8 @@ starting_out = True
 # rate object gets a sleep() method which will sleep 1/200 seconds
 rate = rospy.Rate(20)
 
+state_change_time = 
+
 # starting out, if no wall, go straight then turn right
 
 while not rospy.is_shutdown():
@@ -77,18 +79,15 @@ while not rospy.is_shutdown():
             else:
                 print("moving forward", forward_twist.linear.x)
         else: # Rotating!
-            print("rotating")
+            print("turning")
 
-            if g_range_ahead < 0.3:
-                print("keep rotating!")
-            else: #Drive forward!
-                print("driving forward")
-                driving_direction = 1
+            if driving_direction == 0:
+                # turn left
+                
+            elif driving_direction == 2:
+                # turn right
 
-        if driving_direction == 1:
-            cmd_vel_pub.publish(forward_twist)
-        elif driving_direction == 0:
-            cmd_vel_pub.publish(left_twist)
-        elif driving_direction == 2:
-            cmd_vel_pub.publish(right_twist)
+            # continue driving forward
+            driving_direction = 1
+
     rate.sleep()
