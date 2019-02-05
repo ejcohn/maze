@@ -69,21 +69,61 @@ cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
 rospy.init_node('maze')
 
 forward_twist = Twist()
-forward_twist.linear.x = forward_speed
+forward_twist.linear.x = 0.22
+right_twist = Twist()
+right_twist.angular.z = 1
+left_twist = Twist()
+left_twist.angular.z = -1
+
+# if driving_forward = 1 - forward, 0 - left, 2 - right
+driving_direction = 1
+
+# if starting out, go forward
+starting_out = True
 
 # rate object gets a sleep() method which will sleep 1/200 seconds
 rate = rospy.Rate(20)
 
+state_change_time =
+
+# starting out, if no wall, go straight then turn right
 
 while not rospy.is_shutdown():
-    # condition 1: can turn left
-    if g_range_ahead > wall_thresh and g_range_left > wall_thresh:
-        turn_left_and_go_a_little(cmd_vel_pub)
-    # condition 2: can't turn left
-    elif g_range_ahead > wall_thresh:
-        cmd_vel_pub.publish(forward_twist)
-    # condition 3: can't go straight
-    else:
-        turn_right(cmd_vel_pub)
+    if starting_out:
+        starting_out = False
+        while(g_range_ahead >= 0.3):
+            cmd_vel_pub.publish(forward_twist)
+        # then turn right
+        driving_direction = 2
+
+
+    else: # not starting out
+        if driving_forward == 1:
+            if can_turn_left:
+                #turn left
+                driving_forward = 0
+
+            if g_range_ahead < 0.3:
+                print("bumped into object! Going to turn")
+                if can_turn_left:
+                    #turn left
+                    driving_direction = 0
+                else:
+                    #turn right
+                    driving_direction = 2
+
+            else:
+                print("moving forward", forward_twist.linear.x)
+        else: # Rotating!
+            print("turning")
+
+            if driving_direction == 0:
+                # turn left
+
+            elif driving_direction == 2:
+                # turn right
+
+            # continue driving forward
+            driving_direction = 1
 
     rate.sleep()
