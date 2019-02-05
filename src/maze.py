@@ -6,9 +6,9 @@ from geometry_msgs.msg import Twist
 from math import pi
 
 
-global turn_speed = 1
-global forward_speed = 0.22
-global wall_thresh = 0.3
+turn_speed = .3
+forward_speed = 0.22
+wall_thresh = 0.3
 # Function is called every time there's a scan
 # global keyword is needed so g_range_ahead is available outside of the function
 def scan_callback(msg):
@@ -19,9 +19,6 @@ def scan_callback(msg):
     # TODO list comprehensions to replaces bad data (0's) with ok data ( >= 3.5)
     angle_range_ahead = msg.ranges[0:30] + msg.ranges[-30:]
     angle_range_left = msg.ranges[226:286]
-
-    #print(len(angle_range_ahead))  # if we are getting all the indices we want
-
 
     g_range_ahead = min(angle_range_ahead)
     g_range_left = min(angle_range_left)
@@ -82,7 +79,7 @@ driving_direction = 1
 starting_out = True
 
 # rate object gets a sleep() method which will sleep 1/200 seconds
-rate = rospy.Rate(20)
+rate = rospy.Rate(10)
 
 state_change_time =
 
