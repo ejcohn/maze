@@ -5,7 +5,7 @@ from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
 from math import pi
 
-global wall_thresh
+
 turn_speed = .3
 forward_speed = 0.22
 wall_thresh = 0.3
@@ -18,9 +18,7 @@ def scan_callback(msg):
 
     angle_range_ahead = msg.ranges[0:30] + msg.ranges[-30:]
     angle_range_left = msg.ranges[226:286]
-    # replace infinity readings (0.0) w/ a real number (4)
-    angle_range_ahead = [4 if x == 0.0 else x for x in angle_range_ahead]
-    angle_range_left = [4 if x == 0.0 else x for x in angle_range_left]
+
 
     g_range_ahead = min(angle_range_ahead)
     g_range_left = min(angle_range_left)
