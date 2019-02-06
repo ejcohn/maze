@@ -5,7 +5,7 @@ from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
 from math import pi
 
-
+global wall_thresh
 turn_speed = .3
 forward_speed = 0.22
 wall_thresh = 0.3
@@ -16,9 +16,11 @@ def scan_callback(msg):
     global g_range_left
     # get the elements w/in a certain range (30 degrees each direction)
 
-    # TODO list comprehensions to replaces bad data (0's) with ok data ( >= 3.5)
     angle_range_ahead = msg.ranges[0:30] + msg.ranges[-30:]
     angle_range_left = msg.ranges[226:286]
+    # replace infinity readings (0.0) w/ a real number (4)
+    angle_range_ahead = [4 if x == 0.0 else x for x in angle_range_ahead]
+    angle_range_left = [4 if x == 0.0 else x for x in angle_range_left]
 
     g_range_ahead = min(angle_range_ahead)
     g_range_left = min(angle_range_left)
@@ -49,7 +51,11 @@ def turn_left_and_go_a_little(cmd_pub, angle=90, x_time=1):
         forward_twist.linear.x = forward_speed
         cmd_pub.publish(forward_twist)
 
-
+def can_turn_left():
+    if g_range_left > wall_thresh + .22:
+        return True
+    else:
+        return False
 
 # Main program
 g_range_ahead = 1 # anything to start
@@ -66,11 +72,13 @@ cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
 rospy.init_node('maze')
 
 forward_twist = Twist()
-forward_twist.linear.x = 0.22
+forward_twist.linear.x = forward_speed
 right_twist = Twist()
 right_twist.angular.z = 1
 left_twist = Twist()
 left_twist.angular.z = -1
+wall_follow = Twist()
+wall_follow.linear.x = forward_speed
 
 # if driving_forward = 1 - forward, 0 - left, 2 - right
 driving_direction = 1
@@ -81,28 +89,32 @@ starting_out = True
 # rate object gets a sleep() method which will sleep 1/200 seconds
 rate = rospy.Rate(10)
 
-state_change_time =
+state_change_time = 0
 
 # starting out, if no wall, go straight then turn right
 
 while not rospy.is_shutdown():
     if starting_out:
         starting_out = False
-        while(g_range_ahead >= 0.3):
+        while(g_range_ahead >= wall_thresh):
             cmd_vel_pub.publish(forward_twist)
         # then turn right
+        turn_right(cmd_vel_pub)
         driving_direction = 2
 
 
     else: # not starting out
         if driving_forward == 1:
-            if can_turn_left:
+            # drive forward
+            wall_follow.angular.z = 0 + (g_range_left - wall_thresh)/1.5
+            cmd_vel_pub.publish(wall_follow)
+            if can_turn_left():
                 #turn left
-                driving_forward = 0
+                turn_left_and_go_a_little(cmd_vel_pub)
 
-            if g_range_ahead < 0.3:
+            if g_range_ahead < wall_thresh:
                 print("bumped into object! Going to turn")
-                if can_turn_left:
+                if can_turn_left():
                     #turn left
                     driving_direction = 0
                 else:
@@ -116,9 +128,10 @@ while not rospy.is_shutdown():
 
             if driving_direction == 0:
                 # turn left
-
+                turn_left_and_go_a_little(cmd_vel_pub)
             elif driving_direction == 2:
                 # turn right
+                turn_right(cmd_vel_pub)
 
             # continue driving forward
             driving_direction = 1
