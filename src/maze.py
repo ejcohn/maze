@@ -18,7 +18,7 @@ def scan_callback(msg):
     # get the elements w/in a certain range (30 degrees each direction)
 
     angle_range_ahead = msg.ranges[0:30] + msg.ranges[-30:]
-    angle_range_left = msg.ranges[226:286]
+    angle_range_left = msg.ranges[60:120]
     # replace infinity readings (0.0) w/ a real number (4)
     angle_range_ahead = [4 if x == 0.0 else x for x in angle_range_ahead]
     angle_range_left = [4 if x == 0.0 else x for x in angle_range_left]
@@ -103,6 +103,7 @@ while not rospy.is_shutdown():
         # then turn right
         turn_right(cmd_vel_pub)
         print("found a wall")
+        print(g_range_left)
         driving_direction = 1
 
 
@@ -139,5 +140,5 @@ while not rospy.is_shutdown():
 
             # continue driving forward
             driving_direction = 1
-
+            print(g_range_left)
     rate.sleep()
