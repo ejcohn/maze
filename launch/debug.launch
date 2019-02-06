@@ -1,0 +1,6 @@
+<launch>
+  <node name="key_publisher" pkg="maze"
+    type="key_publisher.py"/>
+  <node name="simple_teleop" pkg="maze"
+    type="simple_teleop.py" output="screen"/>
+</launch>
