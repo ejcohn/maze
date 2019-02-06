@@ -102,7 +102,8 @@ while not rospy.is_shutdown():
             cmd_vel_pub.publish(forward_twist)
         # then turn right
         turn_right(cmd_vel_pub)
-        driving_direction = 2
+        print("found a wall")
+        driving_direction = 1
 
 
     else: # not starting out
@@ -112,6 +113,7 @@ while not rospy.is_shutdown():
             cmd_vel_pub.publish(wall_follow)
             if can_turn_left():
                 #turn left
+                print("wall lost, turning left")
                 turn_left_and_go_a_little(cmd_vel_pub)
 
             if g_range_ahead < wall_thresh:
