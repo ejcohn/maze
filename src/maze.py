@@ -106,7 +106,7 @@ while not rospy.is_shutdown():
 
 
     else: # not starting out
-        if driving_forward == 1:
+        if driving_direction == 1:
             # drive forward
             wall_follow.angular.z = 0 + (g_range_left - wall_thresh)/1.5
             cmd_vel_pub.publish(wall_follow)
