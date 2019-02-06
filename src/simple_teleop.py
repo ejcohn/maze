@@ -7,6 +7,12 @@ from sensor_msgs.msg import LaserScan
 from math import pi
 
 rospy.init_node('simple_teleop')  # initialize node
+global turn_speed
+global wall_thresh
+global forward_speed
+turn_speed = 0.6
+wall_thresh = 0.3
+forward_speed = 0.22
 
 def key_callback(msg):  # this function may not be necessary?
     global key
@@ -32,7 +38,7 @@ def scan_callback(msg):
 # turns a robot an input number of degrees to the right, (default 90)
 def turn_right(cmd_pub, angle=90):
     start_time = rospy.Time.now().secs
-    turn_time = angle*pi/180 / turn_speed
+    turn_time = (angle*pi/180 / turn_speed) / 10
     while(rospy.Time.now().secs - turn_time < start_time):
         turn_twist = Twist()
         turn_twist.angular.z =  -turn_speed
@@ -42,7 +48,7 @@ def turn_right(cmd_pub, angle=90):
 # turns left a given number of degrees (default 90) then moves forward a little but (default 1 second)
 def turn_left_and_go_a_little(cmd_pub, angle=90, x_time=1):
     start_time = rospy.Time.now().secs
-    turn_time = angle*pi/180 / turn_speed
+    turn_time = (angle*pi/180 / turn_speed) / 10
     while(rospy.Time.now().secs - turn_time < start_time):
         turn_twist = Twist()
         turn_twist.angular.z =  turn_speed
