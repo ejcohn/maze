@@ -39,12 +39,18 @@ def scan_callback(msg):
 
 # turns a robot an input number of degrees to the right, (default 90)
 def turn_right(cmd_pub, angle=90):
-    start_time = rospy.Time.now().secs
-    turn_time = (angle*pi/180 / turn_speed) / 10
-    while(rospy.Time.now().secs - turn_time < start_time):
+    start_angle = odom_angle
+    while odom_angle < start_angle + 1.57:
         turn_twist = Twist()
-        turn_twist.angular.z =  -turn_speed
+        turn_twist.angular.z = -turn_speed #Infinite loop currently!! doesn't work!!
         cmd_pub.publish(turn_twist)
+    #while abs(start_angle - angle) < angle
+    #start_time = rospy.Time.now().secs
+    #turn_time = (angle*pi/180 / turn_speed) / 10
+    # while(rospy.Time.now().secs - turn_time < start_time):
+    #     turn_twist = Twist()
+    #     turn_twist.angular.z =  -turn_speed
+    #     cmd_pub.publish(turn_twist)
 
 
 # turns left a given number of degrees (default 90) then moves forward a little but (default 1 second)
