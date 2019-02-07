@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 import rospy
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, Quaternion
+from nav_msgs.msg import Odometry
+import tf
 from std_msgs.msg import String
 from sensor_msgs.msg import LaserScan
 from math import pi
@@ -60,9 +62,15 @@ def turn_left_and_go_a_little(cmd_pub, angle=90, x_time=1):
         forward_twist.linear.x = forward_speed
         cmd_pub.publish(forward_twist)
 
+def odom_callback(msg): 
+    quaternion = msg.pose.pose.orientation
+    explicit_quat = [quaternion.x, quaternion.y, quaternion.z, quaternion.w]
+    global odom_angle
+    odom_angle = tf.transformations.euler_from_quaternion(explicit_quat)[2]
 
 
 key = None  # default to null
+odom_angle = None
 left_vals = []
 right_vals = []
 g_range_ahead = 1
@@ -73,6 +81,8 @@ cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)  # command publis
 key_sub = rospy.Subscriber('keys', String, key_callback, queue_size=10)  # keystroke subscriber
 
 laser_sub = rospy.Subscriber('scan', LaserScan, scan_callback)
+
+odom_sub = rospy.Subscriber('/odom', Odometry, odom_callback)
 
 main_drive = Twist()
 main_drive.linear.x = 0
@@ -101,6 +111,8 @@ while not rospy.is_shutdown():
     elif key == 'v' or key == 'V':
         print('left', g_range_left)
         print('ahead', g_range_ahead)
+    elif key == 'o' or key == 'O':
+        print('odom', odom_angle)
     elif key == None:
         continue
     else:
