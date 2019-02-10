@@ -3,6 +3,7 @@
 import rospy
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
+from std_msgs.msg import Int64
 from math import pi
 
 global wall_thresh
@@ -10,6 +11,11 @@ global wall_thresh
 turn_speed = .3
 forward_speed = 0.22
 wall_thresh = 0.3
+
+def angle_callback(msg)
+    global z_angle
+    z_angle = msg.data
+
 # Function is called every time there's a scan
 # global keyword is needed so g_range_ahead is available outside of the function
 def scan_callback(msg):
@@ -27,25 +33,43 @@ def scan_callback(msg):
     g_range_ahead = min(angle_range_ahead)
     g_range_left = min(angle_range_left)
 
+# Main program
+g_range_ahead = 1 # anything to start
+g_range_left = 1
+z_angle = 0
 
 # turns a robot an input number of degrees to the right, (default 90)
 def turn_right(cmd_pub, angle=90):
-    start_time = rospy.Time.now().secs
-    turn_time = angle*pi/180 / turn_speed
-    while(rospy.Time.now().secs - turn_time < start_time):
-        turn_twist = Twist()
-        turn_twist.angular.z =  -turn_speed
-        cmd_pub.publish(turn_twist)
+    start_angle = z_angle
+    turn_amount = angle*pi/180
+    end_angle = start_angle - turn_amount
+    if end_angle < -pi:
+        while z_angle < start_angle or z_angle > end_angle + 2*pi:
+            turn_twist = Twist()
+            turn_twist.angular.z = -turn_speed
+            cmd_pub(turn_twist)
+    else:
+        while z_angle > end_angle:
+            turn_twist = Twist()
+            turn_twist.angular.z = -turn_speed
+            cmd_pub(turn_twist)
 
 
 # turns left a given number of degrees (default 90) then moves forward a little but (default 1 second)
 def turn_left_and_go_a_little(cmd_pub, angle=90, x_time=1):
-    start_time = rospy.Time.now().secs
-    turn_time = angle*pi/180 / turn_speed
-    while(rospy.Time.now().secs - turn_time < start_time):
-        turn_twist = Twist()
-        turn_twist.angular.z =  turn_speed
-        cmd_pub.publish(turn_twist)
+    start_angle = z_angle
+    turn_amount = angle*pi/180
+    end_angle = start_angle - turn_amount
+    if end_angle > pi:
+        while z_angle > start_angle or z_angle < end_angle - 2*pi:
+            turn_twist = Twist()
+            turn_twist.angular.z = turn_speed
+            cmd_pub(turn_twist)
+    else:
+        while z_angle < end_angle:
+            turn_twist = Twist()
+            turn_twist.angular.z = turn_speed
+            cmd_pub(turn_twist)
 
     start_time = rospy.Time.now().secs
     while(rospy.Time.now().secs - x_time < start_time and g_range_ahead > wall_thresh):
@@ -59,12 +83,13 @@ def can_turn_left():
     else:
         return False
 
-# Main program
-g_range_ahead = 1 # anything to start
-g_range_left = 1
+
 
 # Declare a subscriber to message 'scan' with message class LaserScan
 scan_sub = rospy.Subscriber('scan', LaserScan, scan_callback)
+
+# subscriber to the angle_node which converets odom quarternions to euler angles
+angle_sub = rospy.Subscriber('/angle', Int64, angle_callback)
 
 # Create a Publisher object. queue_size=1 means that messages that are
 # published but not handled by received are lost beyond queue size.

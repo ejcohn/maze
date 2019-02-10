@@ -7,11 +7,11 @@ from std_msgs.msg import int64
 
 rospy.init_node('angle_node')  # initialize node
 
-def odom_callback(msg): 
-    quaternion = msg.pose.pose.orientation
-    explicit_quat = [quaternion.x, quaternion.y, quaternion.z, quaternion.w]
+def odom_callback(msg):
+    quaternion = msg.pose.pose.orientation  # get quarternion from Odometry message
+    explicit_quat = [quaternion.x, quaternion.y, quaternion.z, quaternion.w]  # turn it into a usable quaternion for the upcoming method
     global odom_angle
-    odom_angle = tf.transformations.euler_from_quaternion(explicit_quat)[2]
+    odom_angle = tf.transformations.euler_from_quaternion(explicit_quat)[2]  # get just the z-axis angle 
 
 odom_sub = rospy.Subscriber('/odom', Odometry, odom_callback)
 
@@ -21,5 +21,5 @@ rate = rospy.Rate(10)  # to match key_publisher
 odom_angle = None
 
 while not rospy.is_shutdown():
-    
-    angle_pub.Publish
+
+    angle_pub.Publish(odom_angle)
