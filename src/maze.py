@@ -24,7 +24,7 @@ def scan_callback(msg):
     # get the elements w/in a certain range (30 degrees each direction)
 
     angle_range_ahead = msg.ranges[0:30] + msg.ranges[-30:]
-    angle_range_left = msg.ranges[60:120]
+    angle_range_left = msg.ranges[-120:-60]
     # replace infinity readings (0.0) w/ a real number (4)
     angle_range_ahead = [4 if x == 0.0 else x for x in angle_range_ahead]
     angle_range_left = [4 if x == 0.0 else x for x in angle_range_left]
@@ -34,7 +34,7 @@ def scan_callback(msg):
     g_range_left = min(angle_range_left)
 
 # Main program
-g_range_ahead = 1 # anything to start
+g_range_ahead = 4 # anything to start
 g_range_left = 1
 z_angle = 0
 
@@ -109,63 +109,51 @@ left_twist.angular.z = -1
 wall_follow = Twist()
 wall_follow.linear.x = forward_speed
 
-# if driving_forward = 1 - forward, 0 - left, 2 - right
-driving_direction = 1
-
 # if starting out, go forward
 starting_out = True
 
 # rate object gets a sleep() method which will sleep 1/200 seconds
-rate = rospy.Rate(10)
+rate = rospy.Rate(20)
 
 state_change_time = 0
 
 # starting out, if no wall, go straight then turn right
 
 while not rospy.is_shutdown():
+    print("starting out: ", starting_out)
+    print("g_range_ahead", g_range_ahead)
+    print("g_range_left", g_range_left)
     if starting_out:
-        starting_out = False
-        while(g_range_ahead >= wall_thresh):
-            cmd_vel_pub.publish(forward_twist)
-        # then turn right
-        print("found a wall")
-        turn_right(cmd_vel_pub)
-        print(g_range_left)
-        driving_direction = 1
-
+        cmd_vel_pub.publish(forward_twist)
+        if g_range_ahead < wall_thresh:
+            stop_twist = Twist()
+            stop_twist.linear.x = 0
+            cmd_vel_pub.publish(stop_twist)
+            starting_out = False
+            # then turn right
+            print("found a wall")
+            turn_right(cmd_vel_pub)
+            print(g_range_left)
 
     else: # not starting out
-        if driving_direction == 1:
             # drive forward
-            wall_follow.angular.z = 0 + (g_range_left - wall_thresh)/1.5
-            cmd_vel_pub.publish(wall_follow)
+        wall_follow.angular.z = 0 + (g_range_left - wall_thresh)/1.5
+        cmd_vel_pub.publish(wall_follow)
+        print("moving forward", forward_twist.linear.x, "angular velocity", wall_follow.angular.z)
+        if can_turn_left():
+            # turn left
+            print("wall lost, turning left")
+            turn_left_and_go_a_little(cmd_vel_pub)
+
+        elif g_range_ahead < wall_thresh:
+            print("bumped into object! Going to turn")
             if can_turn_left():
-                #turn left
-                print("wall lost, turning left")
-                turn_left_and_go_a_little(cmd_vel_pub)
 
-            if g_range_ahead < wall_thresh:
-                print("bumped into object! Going to turn")
-                if can_turn_left():
-                    #turn left
-                    driving_direction = 0
-                else:
-                    #turn right
-                    driving_direction = 2
-
-            else:
-                print("moving forward", wall_follow.linear.x, wall_follow.angular.z)
-        else: # Rotating!
-            print("turning")
-
-            if driving_direction == 0:
                 # turn left
                 turn_left_and_go_a_little(cmd_vel_pub)
-            elif driving_direction == 2:
+            else:
                 # turn right
                 turn_right(cmd_vel_pub)
 
-            # continue driving forward
-            driving_direction = 1
             print(g_range_left)
     rate.sleep()
