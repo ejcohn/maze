@@ -46,13 +46,11 @@ def turn_right(cmd_pub, angle=90):
     print('start @: ', start_angle, ' end @: ', end_angle)
     if end_angle < -pi:
         while z_angle <= start_angle or z_angle >= end_angle + 2*pi:
-            print("curent angle: ", z_angle, " target: ", end_angle)
             turn_twist = Twist()
             turn_twist.angular.z = -turn_speed
             cmd_pub.publish(turn_twist)
     else:
         while z_angle >= end_angle:
-            print("curent angle: ", z_angle, " target: ", end_angle)
             turn_twist = Twist()
             turn_twist.angular.z = -turn_speed
             cmd_pub.publish(turn_twist)
@@ -66,13 +64,11 @@ def turn_left_and_go_a_little(cmd_pub, angle=90, x_time=3):
     print('start @: ', start_angle, ' end @: ', end_angle)
     if end_angle > pi:
         while z_angle >= start_angle or z_angle <= end_angle - 2*pi:
-            print("curent angle: ", z_angle, " target: ", end_angle)
             turn_twist = Twist()
             turn_twist.angular.z = turn_speed
             cmd_pub.publish(turn_twist)
     else:
         while z_angle <= end_angle:
-            print("curent angle: ", z_angle, " target: ", end_angle)
             turn_twist = Twist()
             turn_twist.angular.z = turn_speed
             cmd_pub.publish(turn_twist)
