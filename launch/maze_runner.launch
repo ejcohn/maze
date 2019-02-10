@@ -1,0 +1,6 @@
+<launch>
+  <node name="maze" pkg="maze"
+    type="maze.py" output="screen"/>
+  <node name="angle_pub" pkg="maze"
+    type="angle_node.py"/>
+</launch>
