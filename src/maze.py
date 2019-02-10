@@ -154,7 +154,7 @@ while not rospy.is_shutdown():
                     driving_direction = 2
 
             else:
-                print("moving forward", forward_twist.linear.x)
+                print("moving forward", wall_follow.linear.x, wall_follow.angular.z)
         else: # Rotating!
             print("turning")
 
