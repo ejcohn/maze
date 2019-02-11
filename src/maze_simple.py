@@ -96,6 +96,8 @@ while not rospy.is_shutdown():
 
     #follow a left wall until either the wall drops off or the robot is cornered
     elif robot_state == states[2]:
+        if not robot_state == past_state:
+            past_state = states[2]
         if g_range_left < wall_threshold and g_range_left < wall_threshold:
             robot_state = [1]  # go to cornered
         elif g_range_left > wall_threshold + 0.15:
