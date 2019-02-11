@@ -43,18 +43,18 @@ g_range_ahead = 4
 g_range_left = 4
 z_orientation = 0
 # variables for use during navigation
-states = ["no wall", "cornered", "following wall", "lost wall", "pick up left"]
+states = ["no wall", "cornered", "following wall", "just lost left wall", "looking to pick up left wall"]
 robot_state = states[0]  # set initial state to no wall
 past_state = None
 movement_twist = Twist()
 x_vel = 0.22  # can be between 0 and 0.22 for TB3 burger
-z_vel = 0.2   # can be between 0 and 2.84 for TB3 burger
+z_vel = 0.1   # can be between 0 and 2.84 for TB3 burger
 wall_threshold = 0.25  # should not be lower than 0.2
 start_angle = 0
 target_angle = 0
-target_buffer = 0.1  # 0.1 rads = about 6 degrees
+target_buffer = 0.05  # 0.1 rads = about 6 degrees, 0.05 is about 3 degrees
 start_time = 0
-sleep_rate = rospy.Rate(20)
+sleep_rate = rospy.Rate(30)
 
 # publishers/ subscribers
 cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
@@ -65,6 +65,8 @@ odom_sub = rospy.Subscriber('/odom', Odometry, odom_callback)
 
 while not rospy.is_shutdown():
     #search for a wall ahead
+    if not robot_state == past_state:
+        past_state = states[0]
     if robot_state == states[0]:
         if g_range_ahead < wall_threshold:
             robot_state = states[1]
@@ -78,7 +80,7 @@ while not rospy.is_shutdown():
     # turn right because the robot is in a corner between a wall ahead and a left wall
     elif robot_state == states[1]:
         # turn right
-        if not robot_state = past_state:  # if first loop through this state
+        if not robot_state == past_state:  # if first loop through this state
             past_state = states[1]
             movement_twist.linear.x = 0
             target_angle = start_angle - 1.57
@@ -94,20 +96,20 @@ while not rospy.is_shutdown():
 
     #follow a left wall until either the wall drops off or the robot is cornered
     elif robot_state == states[2]:
-        if g_range_left < wall_thresh and angle_range_left < wall_thresh:
+        if g_range_left < wall_threshold and g_range_left < wall_threshold:
             robot_state = [1]  # go to cornered
-        elif g_range_left > wall_thresh + 0.15:
+        elif g_range_left > wall_threshold + 0.15:
             robot_state = [3]  # go to left turn
         else:
             movement_twist.linear.x = x_vel
-            movement_twist.angular.z = target_angle - z_orientation
+            movement_twist.angular.z = target_angle - z_orientation   # can we turst odom? NO.
 
 
 
     #left wall dropped off, so turn left and follow
     elif robot_state == states[3]:
         # if the robot is turning after having followed a wall
-        if not robot_state = past_state:
+        if not robot_state == past_state:
             past_state = states[3]
             movement_twist.linear.x = 0
             target_angle = start_angle + 1.57  # right turn
@@ -120,10 +122,10 @@ while not rospy.is_shutdown():
         else:
             movement_twist.angular.z = z_vel
 
-            
+
     # go forward for a little bit until the left lidar pick up a wall
     elif robot_state == states[4]:
-        if not robot_state = past_state:
+        if not robot_state == past_state:
             past_state = states[4]
             start_time = rospy.Time.now().secs
 
