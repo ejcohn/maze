@@ -19,8 +19,8 @@ def scan_callback(msg):
     # get the elements w/in a certain range (30 degrees each direction)
 
     angle_range_ahead = msg.ranges[0:30] + msg.ranges[-30:]
-    angle_range_left = msg.ranges[-120:-60]    # for real robots w/ clockwise lidar
-    # angle_range_left - msg.ranges[60:120]    # for simulated robots w/ counterclockwise lidars
+    #angle_range_left = msg.ranges[-120:-60]    # for real robots w/ clockwise lidar
+    angle_range_left = msg.ranges[60:120]    # for simulated robots w/ counterclockwise lidars
 
     # replace infinity readings (0.0) w/ a real number (4)
     angle_range_ahead = [4 if x == 0.0 else x for x in angle_range_ahead]
@@ -35,7 +35,7 @@ def odom_callback(msg):
     global z_orientation
     quat = msg.pose.pose.orientation
     quat_list = [quat.x, quat.y, quat.z, quat.w]
-    z_orientation = tf.transformations.euler_from_quaternion(quat_list)
+    z_orientation = tf.transformations.euler_from_quaternion(quat_list)[2]
 
 
 # default global variables
@@ -98,14 +98,14 @@ while not rospy.is_shutdown():
     elif robot_state == states[2]:
         if not robot_state == past_state:
             past_state = states[2]
-        if g_range_left < wall_threshold and g_range_left < wall_threshold:
+        if g_range_left < wall_threshold and g_range_ahead < wall_threshold:
             robot_state = [1]  # go to cornered
         elif g_range_left > wall_threshold + 0.15:
             robot_state = [3]  # go to left turn
         else:
             movement_twist.linear.x = x_vel
-            movement_twist.angular.z = target_angle - z_orientation   # can we turst odom? NO.
-
+            #movement_twist.angular.z = target_angle - z_orientation   # can we turst odom? NO.
+            movement_twist.angular.z = 0 + (g_range_left - wall_threshold)/1.5
 
 
     #left wall dropped off, so turn left and follow
@@ -149,4 +149,4 @@ while not rospy.is_shutdown():
     # if the state changes, print the state to the terminal
     if not robot_state == past_state:
         print(robot_state)
-    rospy.sleep(sleep_rate)
+    sleep_rate.sleep()
