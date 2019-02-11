@@ -47,7 +47,7 @@ states = ["no wall", "cornered", "following wall", "just lost left wall", "looki
 robot_state = states[0]  # set initial state to no wall
 past_state = None
 movement_twist = Twist()
-x_vel = 0.22  # can be between 0 and 0.22 for TB3 burger
+x_vel = 0.15  # can be between 0 and 0.22 for TB3 burger
 z_vel = 0.1   # can be between 0 and 2.84 for TB3 burger
 wall_threshold = 0.25  # should not be lower than 0.2
 start_angle = 0
@@ -98,14 +98,16 @@ while not rospy.is_shutdown():
     elif robot_state == states[2]:
         if not robot_state == past_state:
             past_state = states[2]
-        if g_range_left < wall_threshold and g_range_ahead < wall_threshold:
-            robot_state = [1]  # go to cornered
-        elif g_range_left > wall_threshold + 0.15:
-            robot_state = [3]  # go to left turn
+        if g_range_left > wall_threshold + 0.15:
+            robot_state = states[3]  # go to left turn
+            start_angle = z_orientation
+        elif g_range_ahead < wall_threshold:
+            robot_state = states[1]  # go to cornered
+            start_angle = z_orientation
         else:
             movement_twist.linear.x = x_vel
             #movement_twist.angular.z = target_angle - z_orientation   # can we turst odom? NO.
-            movement_twist.angular.z = 0 + (g_range_left - wall_threshold)/1.5
+            #movement_twist.angular.z = 0 + (g_range_left - wall_threshold)
 
 
     #left wall dropped off, so turn left and follow
@@ -119,7 +121,7 @@ while not rospy.is_shutdown():
                 # compensate for crossing from pos to neg readings from odom
                 target_angle -= 2*pi
 
-        if abs(target_angle - z_orientation) < target_buffer:  # if the robot's oriantation is within a certain range of the target
+        if abs(target_angle - z_orientation) < target_buffer:  # if the robot's orientation is within a certain range of the target
             robot_state = states[4]
         else:
             movement_twist.angular.z = z_vel
