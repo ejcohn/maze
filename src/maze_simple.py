@@ -98,6 +98,7 @@ while not rospy.is_shutdown():
     elif robot_state == states[2]:
         if not robot_state == past_state:
             past_state = states[2]
+            movement_twist.angular.z = 0
         if g_range_left > wall_threshold + 0.15:
             robot_state = states[3]  # go to left turn
             start_angle = z_orientation
